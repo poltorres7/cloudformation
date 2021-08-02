@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Metadata:
+  Course: Base infra for general architecure
+Description: Creation of VPC in AWS cloud
+
+Parameters:
+  Env:
+    Type: String
+  VPCName:
+    Type: String
+    Description: Name of your VPC
+  CidrBlock:
+    Type: String
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+
+Resources:
+  CoreVPC:
+    Type: AWS::EC2::VPC
+    Properties: 
+      CidrBlock: !Ref CidrBlock
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: !Sub "${Env}-${VPCName}"
+        - Key: Course
+          Value: DevOps
+        - Key: Env
+          Value: !Ref Env
