@@ -28,3 +28,10 @@ Resources:
           Value: DevOps
         - Key: Env
           Value: !Ref Env
+
+Outputs:
+  CoreVPC:
+    Description: Export VPC ID to be reusable in other templates
+    Value: !Ref CoreVPC
+    Export:
+      Name: !Sub "${Env}-${VPCName}-id"
