@@ -65,14 +65,30 @@ Resources:
         Value: !Ref Env
       - Key: Name
         Value: !Sub "${Env}-IGW-${VPCName}"
-
   AttachInternetGateway:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties: 
       InternetGatewayId: !Ref InternetGateway
       VpcId:
         Fn::ImportValue: !Sub "${Env}-${VPCName}-id"
-  
+  # NAT Gatewway
+  PrivateNat:
+   Type: AWS::EC2::NatGateway
+   Properties:
+      AllocationId:
+         Fn::GetAtt:
+         - EIP
+         - AllocationId
+      SubnetId:
+         Ref: PublicSubnet
+      Tags:
+      - Key: Name
+        Value: !Sub "${Env}-nat-gw"
+  EIP:
+    Type: AWS::EC2::EIP
+    Properties:
+        Domain: vpc
+
   # Create Route Tables
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
@@ -84,14 +100,74 @@ Resources:
           Value: DevOps
       VpcId: 
         Fn::ImportValue: !Sub "${Env}-${VPCName}-id"
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      Tags: 
+        - Key: Name
+          Value: !Sub "${Env}-private-rt"
+        - Key: Course
+          Value: DevOps
+      VpcId: 
+        Fn::ImportValue: !Sub "${Env}-${VPCName}-id"
+  DataRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      Tags: 
+        - Key: Name
+          Value: !Sub "${Env}-data-rt"
+        - Key: Course
+          Value: DevOps
+      VpcId: 
+        Fn::ImportValue: !Sub "${Env}-${VPCName}-id"
+
+  # Define routes
   PublicRoute:
     Type: AWS::EC2::Route
     Properties:
-       RouteTableId: !Ref PublicRouteTable
-       DestinationCidrBlock: 0.0.0.0/0
-       GatewayId: !Ref InternetGateway
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref PrivateNat
+  DataRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref DataRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref PrivateNat
+
+  # Associate tables with subnets
   PublicSubnetAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref PublicSubnet
       RouteTableId: !Ref PublicRouteTable
+  PrivateSubnetAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet
+      RouteTableId: !Ref PrivateRouteTable
+  DataSubnetAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref DataSubnet
+      RouteTableId: !Ref DataRouteTable
+
+Outputs:
+  PublicSubnet:
+    Value: !Ref PublicSubnet
+    Export:
+      Name: !Sub "${Env}-public-subnet-id"
+  PrivateSubnet:
+    Value: !Ref PrivateSubnet
+    Export:
+      Name: !Sub "${Env}-private-subnet-id"
+  DataSubnet:
+    Value: !Ref DataSubnet
+    Export:
+      Name: !Sub "${Env}-data-subnet-id"
