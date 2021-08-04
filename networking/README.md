@@ -1,7 +1,11 @@
-Commands
+Laboratorios del curso devops
 ==========
 
 #### Instrucciones
+
+Realizar los laboratorios en orden numérico ya que uno depende del otro
+
+-----
 
 ### Lab 1
 
@@ -25,7 +29,7 @@ aws cloudformation deploy --template-file aws-vpc.yml \
 > Recuerda eliminar los recursos creados. Esto se puede hacer
 > Eliminando el stack desde la consola de AWS en la sección de cloudformation
 
-
+------
 
 ### Lab 2
 
@@ -37,7 +41,7 @@ Con el siguiente comando y el deploy del template `aws-subnets.yml` podrás crea
 
 ```bash
 aws cloudformation deploy --template-file aws-subnets.yml \
-    --stack-name dev-public-subnet \
+    --stack-name dev-subnets-networking \
     --parameter-overrides \
     Env=dev VPCName=core PublicSubnetCidrBlock=10.0.16.0/22 \
     PrivateSubnetCidrBlock=10.0.0.0/21 \
@@ -65,3 +69,33 @@ aws cloudformation deploy --template-file aws-subnets.yml \
 
 **Conexión a la instancia**
 ![Conexión a la instancia](https://i.imgur.com/yUwreOX.png)
+
+------
+
+### Lab 3
+
+- Despliega los últimos cambios del template `aws-subnets.yml`
+- Crea una instancia en cada una de las subnets y valida que haya comunicación
+
+Con el siguiente comando realiza el deploy del template `ec2-template.yml` podrás crear estos recursos.
+
+```bash
+aws cloudformation deploy --template-file ec2-template.yml \
+    --stack-name dev-instances \
+    --parameter-overrides \
+    Env=dev KeyName=cerouno-demo \
+    InstanceType=t3.nano VPCName=core \
+    --tags Env=Dev Course=DevOps
+```
+
+**3 instances created**
+![aws dashboard, 3 instances](https://i.imgur.com/ahESM05.png)
+
+**Public instance**
+![public instance](https://i.imgur.com/3CsvqfZ.png)
+
+**Private instance**
+![private instance](https://i.imgur.com/9TTqhkO.png)
+
+**Data instance**
+![data instance](https://i.imgur.com/ip6zUi4.png)
